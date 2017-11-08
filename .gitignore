@@ -1,0 +1,6 @@
+*.bak
+*.swp
+bin/
+lib/
+data/
+/bin
