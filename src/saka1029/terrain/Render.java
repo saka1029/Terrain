@@ -49,61 +49,23 @@ public class Render {
         return maxi;
     }
 
-//    static double square(double d) {
-//        return d * d;
-//    }
-//
-//    static final double[][] WEIGHT = new double[INTERPOLATE_RANGE * 2 + 1][INTERPOLATE_RANGE * 2 + 1];
-//    static {
-//        for (int i = -INTERPOLATE_RANGE; i <= INTERPOLATE_RANGE; ++i)
-//            for (int j = -INTERPOLATE_RANGE; j <= INTERPOLATE_RANGE; ++j)
-//                if (i != 0 && j != 0)
-//                    WEIGHT[i + INTERPOLATE_RANGE][j + INTERPOLATE_RANGE] = 1D / Math.sqrt(square(i) + square(j));
-//    }
-//
-//    void interpolate(int xx, int yy, int x, int y, short[][] area) throws IOException {
-//        int[] typeCount = new int[TypeHeight.TYPE_SIZE];
-//        double[] heightCount = new double[TypeHeight.TYPE_SIZE];
-//        double[] heightSum = new double[TypeHeight.TYPE_SIZE];
-//        for (int i = -INTERPOLATE_RANGE; i <= INTERPOLATE_RANGE; ++i)
-//            for (int j = -INTERPOLATE_RANGE; j <= INTERPOLATE_RANGE; ++j) {
-//                if (i == 0 && j == 0)
-//                    continue;
-//                int xi = x + i;
-//                int yj = y + j;
-//                int typeHeight = xi >= 0 && xi < IMAGE_SIZE && yj >= 0 && yj < IMAGE_SIZE ? (int) area[xi][yj]
-//                    : storage.get(xx + xi, yy + yj);
-//                int type = TypeHeight.type(typeHeight);
-//                    typeCount[type]++;
-//                if (type != TypeHeight.EMPTY) {
-//                    double weight = WEIGHT[i + INTERPOLATE_RANGE][j + INTERPOLATE_RANGE];
-//                    heightCount[type] += weight;
-//                    heightSum[type] += weight * TypeHeight.height(typeHeight);
-//                }
-////                // weightは固定で1.0とする。
-////                if (type != TypeHeight.EMPTY) {
-////                    typeCount[type]++;
-////                    heightCount[type] += 1.0;
-////                    heightSum[type] += TypeHeight.height(typeHeight);
-////                }
-//            }
-//        int maxType = maxType(typeCount);
-//        if (maxType != TypeHeight.EMPTY)
-//            area[x][y] = (short) TypeHeight.typeHeight(maxType,
-//                (int) Math.round(heightSum[maxType] / heightCount[maxType]));
-//    }
-
-/////////////////////////////////////////////////////
-
     double[][] weight;
+    {
+        weight = new double[INTERPOLATE_RANGE * 2 + 1][INTERPOLATE_RANGE * 2 + 1];
+        for (int i = -INTERPOLATE_RANGE ; i <= INTERPOLATE_RANGE ; ++i)
+            for (int j = -INTERPOLATE_RANGE ; j <= INTERPOLATE_RANGE ; ++j)
+                if (i != 0 && j != 0)
+                  weight[i + INTERPOLATE_RANGE][j + INTERPOLATE_RANGE] = 1D / Math.sqrt(i * i + j * j);
+//                    weight[i + range][j + range] = 1D / (i * i + j * j);
+    }
     double[] heightWeight = new double[TypeHeight.TYPE_SIZE];
     double[] heightSum = new double[TypeHeight.TYPE_SIZE];
 
-    void interpolate(int xx, int yy, int x, int y, short[][] area, int range) throws IOException {
+    void interpolate(int xx, int yy, int x, int y, short[][] area) throws IOException {
         Arrays.fill(heightWeight, 0);
         Arrays.fill(heightSum, 0);
-        for (int i = -range; i <= range; ++i)
-            for (int j = -range; j <= range; ++j) {
+        for (int i = -INTERPOLATE_RANGE; i <= INTERPOLATE_RANGE; ++i)
+            for (int j = -INTERPOLATE_RANGE; j <= INTERPOLATE_RANGE; ++j) {
                 if (i == 0 && j == 0)
                     continue;
                 int xi = x + i;
@@ -113,13 +75,15 @@ public class Render {
                     : storage.get(xx + xi, yy + yj);
                 int type = TypeHeight.type(typeHeight);
                 int height = TypeHeight.height(typeHeight);
-                double w = weight[i + range][j + range];
+                double w = weight[i + INTERPOLATE_RANGE][j + INTERPOLATE_RANGE];
                 heightWeight[type] += w;
                 heightSum[type] += w * height;
             }
-        int maxType = -1;
-        double maxWeight = -1;
-        for (int i = 0; i < TypeHeight.TYPE_SIZE; ++i)
+//        if (x ==31)
+//            info(logger, "x=%d y=%d heightWeight=%s", x, y, Arrays.toString(heightWeight));
+        int maxType = 0;
+        double maxWeight = heightWeight[0];
+        for (int i = 1; i < TypeHeight.TYPE_SIZE; ++i)
             if (heightWeight[i] > maxWeight) {
                 maxType = i;
                 maxWeight = heightWeight[i];
@@ -130,17 +94,11 @@ public class Render {
     }
 
     void interpolate(int xx, int yy, short[][] area, int range) throws IOException {
-        weight = new double[range * 2 + 1][range * 2 + 1];
-        for (int i = -range; i <= range; ++i)
-            for (int j = -range; j <= range; ++j)
-                if (i != 0 && j != 0)
-//                  weight[i + range][j + range] = 1D / Math.sqrt(square(i) + square(j));
-                    weight[i + range][j + range] = 1D / (i * i + j * j);
         for (int x = 0; x < IMAGE_SIZE; ++x)
             for (int y = 0; y < IMAGE_SIZE; ++y) {
                 int typeHeight = (int) area[x][y];
                 if (TypeHeight.type(typeHeight) == TypeHeight.EMPTY)
-                    interpolate(xx, yy, x, y, area, range);
+                    interpolate(xx, yy, x, y, area);
             }
     }
 
@@ -171,15 +129,6 @@ public class Render {
         return Math.atan(height / distance);
     }
 
-//    static int shade(int color, double rate) {
-//        double n = (double) color * rate;
-//        return n < 0F ? 0 : n > 255F ? 255 : (int) n;
-//    }
-//
-//    static Color shade(Color c, double rate) {
-//        return new Color(shade(c.getRed(), rate), shade(c.getGreen(), rate), shade(c.getBlue(), rate));
-//    }
-
     static final double SIN45 = Math.sin(Math.PI / 4.0);
 
     void render(int xx, int yy, short[][] area, Graphics g) throws IOException {
@@ -189,14 +138,10 @@ public class Render {
                 int type = TypeHeight.type(heightType);
                 int height = TypeHeight.height(heightType);
                 switch (type) {
-                // case TypeHeight.EMPTY:
-                // case TypeHeight.データなし:
-                // break;
+//                case TypeHeight.EMPTY:
+//                case TypeHeight.データなし:
 //                case TypeHeight.海水面:
 //                case TypeHeight.内水面:
-//                    System.out.println("水");
-//                    g.setColor(Color.RED);
-//                    g.fillRect(x, y, 1, 1);
 //                    break;
                 case TypeHeight.地表面:
                 case TypeHeight.表層面:
@@ -218,6 +163,7 @@ public class Render {
     void render(int xx, int yy, File outFile) throws IOException {
         short[][] area = new short[IMAGE_SIZE][IMAGE_SIZE];
         storage.get(xx, yy, area);
+        interpolate(xx, yy, area, INTERPOLATE_RANGE);
         interpolate(xx, yy, area, INTERPOLATE_RANGE);
         BufferedImage img = new BufferedImage(IMAGE_SIZE, IMAGE_SIZE, BufferedImage.TYPE_INT_ARGB);
         Graphics g = img.getGraphics();
@@ -255,17 +201,17 @@ public class Render {
     }
 
     static String[] FILES = {
-        "29096-12905-15.bin",
-        "29096-12906-15.bin",
-        "29096-12907-15.bin",
-        "29097-12905-15.bin",
-        "29097-12906-15.bin",
-        "29097-12907-15.bin",
-        "29098-12905-15.bin",
-        "29098-12906-15.bin",
-        "29098-12907-15.bin",
+//        "29096-12905-15.bin",
+//        "29096-12906-15.bin",
+//        "29096-12907-15.bin",
+//        "29097-12905-15.bin",
+//        "29097-12906-15.bin",
+//        "29097-12907-15.bin",
+//        "29098-12905-15.bin",
+//        "29098-12906-15.bin",
+//        "29098-12907-15.bin",
 
-        "29138-12942-15.bin",
+        "29127-12884-15.bin",
     };
 
 
@@ -276,8 +222,8 @@ public class Render {
         File outDir = new File(base, "tokyo-height/image/theme1/15");
 //        File outDir = new File(base, "tokyo-height/image/theme2/15-test");
         Util.createDir(outDir);
-//        new Render().render(inDir, outDir, FILES); // selected files only
         new Render().render(inDir, outDir); // all files
+//        new Render().render(inDir, outDir, FILES); // selected files only
         info(logger, "Render: end");
     }
 }

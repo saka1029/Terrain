@@ -23,103 +23,115 @@ import org.xml.sax.SAXException;
 
 public class Parse {
 
-	private static Logger logger = Logger.getLogger(Parse.class.getName());
+    private static Logger logger = Logger.getLogger(Parse.class.getName());
 
-	private static DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-	static {
-		factory.setIgnoringComments(true);
-		factory.setNamespaceAware(true);
-		factory.setValidating(false);
-	}
+    private static DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    static {
+        factory.setIgnoringComments(true);
+        factory.setNamespaceAware(true);
+        factory.setValidating(false);
+    }
 
-	static class HeightData {
-		int divY;
-		int divX;
-		double minLon;
-		double minLat;
-		double maxLon;
-		double maxLat;
-		int startX;
-		int startY;
-		String tuple;
-	}
+    static class HeightData {
+        int divY;
+        int divX;
+        double minLon;
+        double minLat;
+        double maxLon;
+        double maxLat;
+        int startX;
+        int startY;
+        String tuple;
+    }
 
-	File file;
-	BinaryStorage storage;
-	int z;
+    File file;
+    BinaryStorage storage;
+    int z;
 
-	void write(int x, int y, double lon, double lat, int type, int height) throws IOException {
-		long p = GoogleMaps.p(lon, z);
-		long q = GoogleMaps.q(lat, z);
-		int t = TypeHeight.type(storage.get(p, q));
-		if (t == TypeHeight.EMPTY || t == TypeHeight.データなし)
+    void write(int x, int y, double lon, double lat, int type, int height) throws IOException {
+        long p = GoogleMaps.p(lon, z);
+        long q = GoogleMaps.q(lat, z);
+        int t = TypeHeight.type(storage.get(p, q));
+        if (t == TypeHeight.EMPTY || t == TypeHeight.データなし)
             storage.put(p, q, TypeHeight.typeHeight(type, height));
-	}
+    }
 
-	void write(HeightData data) throws IOException {
-		if (data.tuple == null) return;
-		String[] ths = data.tuple.trim().split("[\\r\\n ]+");
-		double unitLat = (data.maxLat - data.minLat) / data.divY;
-		double unitLon = (data.maxLon - data.minLon) / data.divX;
-		int i = 0;
-		int startX = data.startX;
-		int startY = data.startY;
-		L: for (int y = startY; y <= data.divY; ++y) {
-			double lat = data.maxLat - unitLat * y;
-			for (int x = startX; x <= data.divX; ++x) {
-				if (i >= ths.length) break L;
-				double lon = data.minLon + unitLon * x;
+    void write(HeightData data) throws IOException {
+        if (data.tuple == null)
+            return;
+        String[] ths = data.tuple.trim().split("[\\r\\n ]+");
+        double unitLat = (data.maxLat - data.minLat) / data.divY;
+        double unitLon = (data.maxLon - data.minLon) / data.divX;
+        int i = 0;
+        int startX = data.startX;
+        int startY = data.startY;
+        L: for (int y = startY; y <= data.divY; ++y) {
+            double lat = data.maxLat - unitLat * y;
+            for (int x = startX; x <= data.divX; ++x) {
+                if (i >= ths.length)
+                    break L;
+                double lon = data.minLon + unitLon * x;
                 String[] t = ths[i++].split(",");
                 int type = TypeHeight.valueOf(t[0]);
-                int height = (int)Math.round(Double.parseDouble(t[1]));
+                int height = (int) Math.round(Double.parseDouble(t[1]));
                 write(x, y, lon, lat, type, height);
-			}
-			startX = 0;
-		}
-	}
+            }
+            startX = 0;
+        }
+    }
 
-	void parse(Node node, HeightData ie) throws IOException {
-		String name = node.getNodeName();
-		if (name.equals("gml:lowerCorner")) {
-			String[] t = node.getTextContent().trim().split(" ");
-			ie.minLat = Double.parseDouble(t[0]);
-			ie.minLon = Double.parseDouble(t[1]);
-		} else if (name.equals("gml:upperCorner")) {
-			String[] t = node.getTextContent().trim().split(" ");
-			ie.maxLat = Double.parseDouble(t[0]);
-			ie.maxLon = Double.parseDouble(t[1]);
-		} else if (name.equals("gml:high")) {
-			String[] t = node.getTextContent().trim().split(" ");
-			ie.divX = Integer.parseInt(t[0]);
-			ie.divY = Integer.parseInt(t[1]);
-		} else if (name.equals("gml:startPoint")) {
-			String[] t = node.getTextContent().trim().split(" ");
-			ie.startX = Integer.parseInt(t[0]);
-			ie.startY = Integer.parseInt(t[1]);
-		} else if (name.equals("gml:tupleList"))
-			ie.tuple = node.getTextContent();
-		if (!node.hasChildNodes()) return;
-		for (Node c = node.getFirstChild(); c != null; c = c.getNextSibling())
-			parse(c, ie);
-	}
+    void parse(Node node, HeightData ie) throws IOException {
+        String name = node.getNodeName();
+        String[] t;
+        switch (name) {
+        case "gml:lowerCorner":
+            t = node.getTextContent().trim().split(" ");
+            ie.minLat = Double.parseDouble(t[0]);
+            ie.minLon = Double.parseDouble(t[1]);
+            break;
+        case "gml:upperCorner":
+            t = node.getTextContent().trim().split(" ");
+            ie.maxLat = Double.parseDouble(t[0]);
+            ie.maxLon = Double.parseDouble(t[1]);
+            break;
+        case "gml:high":
+            t = node.getTextContent().trim().split(" ");
+            ie.divX = Integer.parseInt(t[0]);
+            ie.divY = Integer.parseInt(t[1]);
+            break;
+        case "gml:startPoint":
+            t = node.getTextContent().trim().split(" ");
+            ie.startX = Integer.parseInt(t[0]);
+            ie.startY = Integer.parseInt(t[1]);
+            break;
+        case "gml:tupleList":
+            ie.tuple = node.getTextContent();
+            break;
+        }
+        if (!node.hasChildNodes())
+            return;
+        for (Node c = node.getFirstChild(); c != null; c = c.getNextSibling())
+            parse(c, ie);
+    }
 
-	void parse(InputStream is) throws ParserConfigurationException, SAXException, IOException {
-		HeightData data = new HeightData();
-		DocumentBuilder builder = factory.newDocumentBuilder();
-		Document document = builder.parse(is);
-		parse(document.getDocumentElement(), data);
-		write(data);
-	}
+    void parse(InputStream is) throws ParserConfigurationException, SAXException, IOException {
+        HeightData data = new HeightData();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.parse(is);
+        parse(document.getDocumentElement(), data);
+        write(data);
+    }
 
-	void parse(File inDir, File outDir, int z) throws
-	        ZipException, IOException, SAXException, ParserConfigurationException {
-	    this.z = z;
-	    try (BinaryStorage storage = new BinaryStorage(outDir, 100)) {
-	        this.storage = storage;
-	        Arrays.sort(inDir.listFiles());
-	        for (File file : inDir.listFiles()) {
+    void parse(File inDir, File outDir, int z)
+        throws ZipException, IOException, SAXException, ParserConfigurationException {
+        this.z = z;
+        try (BinaryStorage storage = new BinaryStorage(outDir, 100)) {
+            this.storage = storage;
+            Arrays.sort(inDir.listFiles());
+            for (File file : inDir.listFiles()) {
                 info(logger, "file=%s", file);
-                if (!file.isFile()) continue;
+                if (!file.isFile())
+                    continue;
                 String name = file.getName().toLowerCase();
                 if (name.endsWith(".zip"))
                     try (ZipFile zip = new ZipFile(file)) {
@@ -136,19 +148,19 @@ public class Parse {
                         parse(is);
                     }
             }
-	    }
-	}
+        }
+    }
 
-	public static void main(String[] args) throws
-	        ZipException, IOException, SAXException, ParserConfigurationException {
-	    info(logger, "Parse: start");
-		int z = 15;
-		File base = new File("D:/JPGIS/height5m/");
-		File inDir = new File(base, "GML");
-		File outDir = new File(base, "BIN");
-		Util.createDir(outDir);
-		new Parse().parse(inDir, outDir, z);
-	    info(logger, "Parse: end");
-	}
+    public static void main(String[] args)
+        throws ZipException, IOException, SAXException, ParserConfigurationException {
+        info(logger, "Parse: start");
+        int z = 15;
+        File base = new File("D:/JPGIS/height5m/");
+        File inDir = new File(base, "GML");
+        File outDir = new File(base, "BIN");
+        Util.createDir(outDir);
+        new Parse().parse(inDir, outDir, z);
+        info(logger, "Parse: end");
+    }
 
 }
