@@ -2,10 +2,10 @@
 
 
 
-## APIキーがない
+## APIキーがない （解決済）
 
-util.js:246 Google Maps API warning:
-    NoApiKeys https://developers.google.com/maps/documentation/javascript/error-messages#no-api-keys
+> util.js:246 Google Maps API warning:
+> NoApiKeys https://developers.google.com/maps/documentation/javascript/error-messages#no-api-keys
     
 index.htmlでは以下のscriptタグでGoogle Maps APIライブラリを読み込んでいる。
 
@@ -17,17 +17,22 @@ index.htmlでは以下のscriptタグでGoogle Maps APIライブラリを読み�
 -------|----
  プロジェクト | Terrain 
  API キー     | AIzaSyCf8VEH-Ojgr_XqudkPWkuCJoXFpsBMkrs 
+ 
+ インクルードするAPIライブラリのパラメータに「key=AIzaSyCf8VEH-Ojgr_XqudkPWkuCJoXFpsBMkrs」を追加する。
 
-## Deprecation
+## Deprecation （解決済）
 
-[Deprecation] The deviceorientation event is deprecated on insecure origins,
-and support will be removed in the future.
-You should consider switching your application to a secure origin,
-such as HTTPS. See https://goo.gl/rStTGz for more details.
+> [Deprecation] The deviceorientation event is deprecated on insecure origins,
+> and support will be removed in the future.
+> You should consider switching your application to a secure origin,
+> such as HTTPS. See https://goo.gl/rStTGz for more details.
 
-## SensorNotRequired
+Google maps APIに端末の向きを検知するdeviceorentationイベントがあるらしいが、
+HTTPSでないサイトの場合は無効になるようである。
 
-Google Maps API warning: SensorNotRequired https://developers.google.com/maps/documentation/javascript/error-messages#sensor-not-required
+## SensorNotRequired （解決済）
+
+> Google Maps API warning: SensorNotRequired https://developers.google.com/maps/documentation/javascript/error-messages#sensor-not-required
 
 index.htmlでは以下のscriptタグでGoogle Maps APIライブラリを読み込んでいる。
 
@@ -38,3 +43,5 @@ index.htmlでは以下のscriptタグでGoogle Maps APIライブラリを読み�
 > The sensor parameter is no longer required for the Google Maps JavaScript API.
 > It won’t prevent the Google Maps JavaScript API from working correctly,
 > but we recommend that you remove the sensor parameter from the script element.
+
+インクルードするAPIのURLから「sensor=false」を削除する。
