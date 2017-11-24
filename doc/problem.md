@@ -13,9 +13,9 @@ index.htmlでは以下のscriptタグでGoogle Maps APIライブラリを読み�
 
 サイト https://developers.google.com/maps/web/ で「キーの取得」ボタンを押して以下のAPIキーを得た。
 
-プロジェクト | Terrain
--------------+----------------------------------------
-API キー     | AIzaSyCf8VEH-Ojgr_XqudkPWkuCJoXFpsBMkrs
+| プロジェクト | Terrain |
+---------------+----------------------------------------
+| API キー     | AIzaSyCf8VEH-Ojgr_XqudkPWkuCJoXFpsBMkrs |
 
 ## Deprecation
 
@@ -34,6 +34,6 @@ index.htmlでは以下のscriptタグでGoogle Maps APIライブラリを読み�
 
 一方Googleの公式サイトでは以下の記述がある。
 
-The sensor parameter is no longer required for the Google Maps JavaScript API.
-It won’t prevent the Google Maps JavaScript API from working correctly,
-but we recommend that you remove the sensor parameter from the script element.
+> The sensor parameter is no longer required for the Google Maps JavaScript API.
+> It won’t prevent the Google Maps JavaScript API from working correctly,
+> but we recommend that you remove the sensor parameter from the script element.
