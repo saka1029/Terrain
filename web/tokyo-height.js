@@ -248,21 +248,29 @@
             zoom: viewState.zoom,
             center: viewState.center,
             panControl: false,
-            mapTypeControlOptions: {
-                position: google.maps.ControlPosition.RIGHT_TOP
-            },
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            mapTypeControl: false,
+//          mapTypeControlOptions: {
+//              position: google.maps.ControlPosition.RIGHT_TOP
+//          },
+            zoomControl: true,
             zoomControlOptions: {
-                position: google.maps.ControlPosition.LEFT_CENTER
+                position: google.maps.ControlPosition.RIGHT_BOTTOM
             },
             streetViewControl: true,
             streetViewControlOptions: {
-                position: google.maps.ControlPosition.LEFT_CENTER
+                position: google.maps.ControlPosition.RIGHT_BOTTOM
             },
             scaleControl: true,
-            mapTypeId: google.maps.MapTypeId.ROADMAP
+            fullscreenControl: true
         }
 
         map = new google.maps.Map(mapDiv, mapOptions);
+//      if (ContextCompat.checkSelfPermission(
+//          this, Manifest.permission.ACCESS_FINE_LOCATION)
+//              == PackageManager.PERMISSION_GRANTED) {
+//          mMap.setMyLocationEnabled(true);
+//      }
         google.maps.event.addListener(map, "zoom_changed", function() {
             var zoom = map.getZoom();
             zoomLabel.innerText = zoom;
