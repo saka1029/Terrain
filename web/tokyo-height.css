@@ -82,3 +82,17 @@ body {
     width: 150px;
     background: rgba(240, 240, 240, 0.6);
 }
+
+.map-tile {
+    position: relative;
+    width: 256px;
+    height: 256px;
+}
+
+.map-label {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    color: blue;
+    background: white;
+}

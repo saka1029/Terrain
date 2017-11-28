@@ -1,32 +1,24 @@
 (function () {
 
-    var BOUNDS = new google.maps.LatLngBounds(
+    const IMAGE_DIR = "image";
+    const BOUNDS = new google.maps.LatLngBounds(
         new google.maps.LatLng(35.077915, 139.234516),
         new google.maps.LatLng(35.882374, 140.158054));
-    var INITIAL_CENTER = new google.maps.LatLng(35.689893,139.691456);
-    var INITIAL_ZOOM = 12;
-    var INITIAL_OPACITY = 50;
-    var CHACHE_SIZE = 100;
-    var geocoder = new google.maps.Geocoder();
+    const INITIAL_CENTER = new google.maps.LatLng(35.689893,139.691456);
+    const INITIAL_ZOOM = 12;
+    const INITIAL_OPACITY = 50;
+    const CHACHE_SIZE = 100;
+    const geocoder = new google.maps.Geocoder();
 
-    var map;
-    var zoomLabel;
-    var infoWindow;
-    var kml;
+    let map;
+    let zoomLabel;
+    let infoWindow;
+    let kml;
 
-    var viewState;
+    let viewState;
 
     function debug(msg) {
         console.log(msg);
-    }
-
-    function TileLayer() /* implements MapType */ {
-        this.tileSize = new google.maps.Size(256, 256);
-        this.maxZoom = 16;
-        this.minZoom = 10;
-        this.name = "TileLayer";
-        this.opacity = viewState.opacity;
-        this.tiles = Array();
     }
 
     function getTileName(p, z) {
@@ -36,7 +28,7 @@
     function setOpacity(obj, opacity) {
         if (typeof(obj.style.filter) == "string")
             obj.style.filter = "alpha(opacity:"+ opacity + ")";
-        var rate = opacity / 100;
+        const rate = opacity / 100;
         if (typeof(obj.style.KHTMLOpacity) == "string")
             obj.style.KHTMLOpacity = rate;
         if (typeof(obj.style.MozOpacity) == "string")
@@ -45,54 +37,81 @@
             obj.style.opacity = rate;
     }
 
-    TileLayer.prototype.setOpacity = function(v) {
-        this.opacity = v;
-        for (var i = 0; i < this.tiles.length; ++i)
-            setOpacity(this.tiles[i], v);
-    }
 
-    TileLayer.prototype.getTile = function(p, z, doc) {
-        var name = getTileName(p, z);
-        for (var i = 0; i < this.tiles.length; ++i)
-            if (this.tiles[i].id == name)
-                return this.tiles[i];
-        var tile = doc.createElement("img");
-        tile.id = name;
-//        tile.className = "layer-image";
-        tile.style.width = this.tileSize.width + "px";
-        tile.style.height = this.tileSize.height + "px";
-        tile.src = "image/theme1/" + z + "/" + name + ".png";
-        tile.onerror = function(){
-            this.onerror = null;
-            this.src= "image/blank.gif";
-        }; 
-        this.tiles.push(tile);
-//        debug("chach size=" + this.tiles.length + " " + name);
-        while (this.tiles.length > CHACHE_SIZE)
-            this.tiles.shift();
-        setOpacity(tile, this.opacity);
-        return tile;
-    }
+    /**
+     * MapTypeインタフェースの実装
+     * @see https://developers.google.com/maps/documentation/javascript/maptypes?hl=ja
+     */
+    class TileLayer /* implements MapType */ {
 
-//    TileLayer.prototype.releaseTile = function(tile) {
-//        debug("release: " + tile.id);
-//    }
+        constructor() {
+            this._tileSize = new google.maps.Size(256, 256);
+            this._opacity = viewState.opacity;
+            this._tiles = Array();
+        }
+
+        get maxZoom() { return 16; }
+        get minZoom() { return 10; }
+        get tileSize() { return this._tileSize; }
+
+        set opacity(v) {
+            this._opacity = v;
+            for (let i = 0; i < this._tiles.length; ++i)
+                setOpacity(this._tiles[i], v);
+        }
+
+        _makeTile(doc, name, z) {
+            const tile = doc.createElement("div");
+            tile.id = name;
+            tile.className = "map-tile";
+            const img = doc.createElement("img");
+            img.src = IMAGE_DIR + "/theme1/" + z + "/" + name + ".png";
+            img.onerror = function(){
+                this.onerror = null;
+                this.src= IMAGE_DIR + "/blank.gif";
+            }; 
+            tile.appendChild(img);
+            const text = doc.createElement("span");
+            if (viewState.label !== 0)
+                text.innerText = name;
+            text.className = "map-label";
+            tile.appendChild(text);
+            return tile;
+        }
+
+        getTile(p, z, doc) {
+            const name = getTileName(p, z);
+            for (let i = 0; i < this._tiles.length; ++i)
+                if (this._tiles[i].id == name)
+                    return this._tiles[i];
+            const tile = this._makeTile(doc, name, z);
+            this._tiles.push(tile);
+            while (this._tiles.length > CHACHE_SIZE)
+                this._tiles.shift();
+            setOpacity(tile, this._opacity);
+            return tile;
+        }
+
+    //    releaseTile(tile) {
+    //        debug("release: " + tile.id);
+    //    }
+    }
 
     function newNode(name, parent) {
-        var node = document.createElement(name);
+        const node = document.createElement(name);
         if (parent) parent.appendChild(node);
         return node;
     }
 
     function query(text) {
-        var req = {
+        const req = {
             address: text,
             bounds: BOUNDS
         };
         geocoder.geocode(req,
             function(res, status) {
                 if (status != google.maps.GeocoderStatus.OK) return;
-                var loc = res[0].geometry.location;
+                const loc = res[0].geometry.location;
                 if (!BOUNDS.contains(loc)) return;
                 infoWindow.setContent(res[0].formatted_address +
                     "<br>" + loc);
@@ -104,41 +123,41 @@
     }
 
     function createZoomLabel() {
-        var zoomLabel = document.getElementById("zoom-label");
+        const zoomLabel = document.getElementById("zoom-label");
         zoomLabel.innerText = viewState.zoom;
         zoomLabel.parentNode.removeChild(zoomLabel);
         return zoomLabel;
     }
 
     function createMapControl(layer) {
-        var control = document.getElementById("map-control");
-        var settingsButton = document.getElementById("settings-button");
-        var about = document.getElementById("about");
-        var inputDiv = document.getElementById("input-div");
-        var slider = document.getElementById("opacity-slider");
+        const control = document.getElementById("map-control");
+        const settingsButton = document.getElementById("settings-button");
+        const about = document.getElementById("about");
+        const inputDiv = document.getElementById("input-div");
+        const slider = document.getElementById("opacity-slider");
         slider.value = viewState.opacity;
         slider.title = "段彩図の透明度を変更します";
         slider.onchange = function (e) {
             debug("changed: " + e.target.value);
-            layer.setOpacity(e.target.value);
-            viewState.setOpacity(e.target.value);
+            layer.opacity = e.target.value;
+            viewState.opacity = e.target.value;
         };
-        var queryText = document.getElementById("query-text");
+        const queryText = document.getElementById("query-text");
         queryText.onkeypress = function(e) {
             if (e.keyCode === 13) query(queryText.value);
         };
-//        var ac = new google.maps.places.Autocomplete(queryText, {});
-        var queryButton = document.getElementById("query-button");
+//        const ac = new google.maps.places.Autocomplete(queryText, {});
+        const queryButton = document.getElementById("query-button");
         queryButton.onclick = function () {
             query(queryText.value);
         };
-        var small = true;
+        let small = true;
         function sign(v) {
             return v < 0 ? -1 : (v > 0 ? 1 : 0);
         }
         function step(w, ew, sw) {
             w += sw;
-            var d = sign(w - ew);
+            const d = sign(w - ew);
             return d === 0 || d === sign(sw) ? ew : w;
         }
         function settingsButtonClick() {
@@ -155,9 +174,9 @@
                 }
                 setTimeout(an, m);
             };
-            var W = 6;  // 幅リサイズのステップ(px)
-            var H = 2;  // 高さリサイズのステップ(px)
-            var M = 2;  // リサイズ間隔(ms)
+            const W = 6;  // 幅リサイズのステップ(px)
+            const H = 2;  // 高さリサイズのステップ(px)
+            const M = 2;  // リサイズ間隔(ms)
             if (small)
                 anim(220, 90, 20, 20, -W, -H, M);
             else
@@ -169,13 +188,13 @@
     }
 
     function getQueryString() {
-        var vars = [];
-        var url = window.location.search;
+        const vars = [];
+        const url = window.location.search;
         if (url.length <= 0) return vars;
-        var hash  = url.slice(1).split("&");    
-        var max = hash.length;
-        for (var i = 0; i < max; i++) {
-            var array = hash[i].split("=");    //keyと値に分割。
+        const hash  = url.slice(1).split("&");    
+        const max = hash.length;
+        for (let i = 0; i < max; i++) {
+            const array = hash[i].split("=");    //keyと値に分割。
             vars.push(array[0]);    //末尾にクエリ文字列のkeyを挿入。
             vars[array[0]] = array[1];    //先ほど確保したkeyに、値を代入。
         }
@@ -184,76 +203,80 @@
 
     function asInt(str, dflt) {
         if (!str) return dflt;
-        var i = parseInt(str, 10);
+        const i = parseInt(str, 10);
         if (i.isNaN) return dflt;
         return i;
     }
 
-    function ViewState() {
-        var vars = getQueryString();
-        this.center = INITIAL_CENTER;
-        if (vars["c"]) {
-            var c = vars["c"].split(",");
-            var lat = parseFloat(c[0]);
-            var lng = parseFloat(c[1]);
-            if (!lat.isNaN && !lng.isNaN)
-                this.center = new google.maps.LatLng(lat, lng);
+    class ViewState {
+        constructor() {
+            const vars = getQueryString();
+            let center = INITIAL_CENTER;
+            if (vars["c"]) {
+                const c = vars["c"].split(",");
+                const lat = parseFloat(c[0]);
+                const lng = parseFloat(c[1]);
+                if (!lat.isNaN && !lng.isNaN)
+                    center = new google.maps.LatLng(lat, lng);
+            }
+            this._center = center;
+            this._zoom = asInt(vars["z"], INITIAL_ZOOM);
+            this._opacity = asInt(vars["o"], INITIAL_OPACITY);
+            this._label = asInt(vars["l"], 0);
         }
-        this.zoom = asInt(vars["z"], INITIAL_ZOOM);
-        this.opacity = asInt(vars["o"], INITIAL_OPACITY);
+
+        changed() {
+            // 現在のURLを変更します。
+            history.replaceState(null, null, this.toURL());
+        }
+
+        get center() { return this._center; }
+        set center(value) {
+            this._center = value;
+            this.changed();
+        }
+
+        get zoom() { return this._zoom; }
+        set zoom(value) {
+            this._zoom = value;
+            this.changed();
+        }
+        
+        get opacity() { return this._opacity; }
+        set opacity(value) {
+            this._opacity = value;
+            this.changed();
+        }
+
+        get label() { return this._label; }
+
+        toString() {
+            return "ViewState(center=" + this._center
+                + ", zoom=" + this._zoom
+                + ", opacity=" + this._opacity
+                + ", label=" + this._label
+                + ")";
+        }
+
+        toURL() {
+            return "?c=" + this._center.lat() + "," + this._center.lng()
+                + "&z=" + this._zoom
+                + "&o=" + this._opacity
+                + "&l=" + this._label;
+        }
+
     }
 
-    ViewState.prototype.changed = function (center) {
-        // URL更新
-        // debug("view state changed: " + this.toString());
-        history.replaceState(null, null, this.toURL());
-    }
-
-    ViewState.prototype.setCenter = function (center) {
-        if (center === this.center) return;
-        this.center = center;
-        this.changed();
-    }
-
-    ViewState.prototype.setZoom = function (zoom) {
-        if (zoom === this.zoom) return;
-        this.zoom = zoom;
-        this.changed();
-    }
-
-    ViewState.prototype.setOpacity = function (opacity) {
-        if (opacity === this.opacity) return;
-        this.opacity = opacity;
-        this.changed();
-    }
-
-    ViewState.prototype.toString = function () {
-        return "ViewState(center=" + this.center
-            + ", zoom=" + this.zoom
-            + ", opacity=" + this.opacity
-            + ")";
-    }
-
-    ViewState.prototype.toURL = function () {
-        return "?c=" + this.center.lat() + "," + this.center.lng()
-            + "&z=" + this.zoom
-            + "&o=" + this.opacity;
-    }
 
     function initialize() {
         viewState = new ViewState();
         debug("" + viewState);
-        var mapDiv = document.getElementById("map-canvas");
-        var mapOptions = {
+        const mapDiv = document.getElementById("map-canvas");
+        const mapOptions = {
             zoom: viewState.zoom,
             center: viewState.center,
             panControl: false,
-            mapTypeId: google.maps.MapTypeId.ROADMAP,
             mapTypeControl: false,
-//          mapTypeControlOptions: {
-//              position: google.maps.ControlPosition.RIGHT_TOP
-//          },
-            zoomControl: true,
             zoomControlOptions: {
                 position: google.maps.ControlPosition.RIGHT_BOTTOM
             },
@@ -262,19 +285,14 @@
                 position: google.maps.ControlPosition.RIGHT_BOTTOM
             },
             scaleControl: true,
-            fullscreenControl: true
+            mapTypeId: google.maps.MapTypeId.ROADMAP
         }
 
         map = new google.maps.Map(mapDiv, mapOptions);
-//      if (ContextCompat.checkSelfPermission(
-//          this, Manifest.permission.ACCESS_FINE_LOCATION)
-//              == PackageManager.PERMISSION_GRANTED) {
-//          mMap.setMyLocationEnabled(true);
-//      }
         google.maps.event.addListener(map, "zoom_changed", function() {
-            var zoom = map.getZoom();
+            const zoom = map.getZoom();
             zoomLabel.innerText = zoom;
-            viewState.setZoom(zoom);
+            viewState.zoom = zoom;
         });
 //        google.maps.event.addListener(map, "center_changed", function() {
 //            debug("center=" + map.getCenter());
@@ -283,19 +301,19 @@
 //            debug("dragstart");
 //        });
         google.maps.event.addListener(map, "dragend", function() {
-            var center = map.getCenter();
-            viewState.setCenter(center);
+            const center = map.getCenter();
+            viewState.center = center;
         });
 
-        var streetDiv = document.getElementById("street-view");
-        var streetOpts = {
+        const streetDiv = document.getElementById("street-view");
+        const streetOpts = {
             scrollwheel: false,
             enableCloseButton: true
         };
-        var streetView = new google.maps.StreetViewPanorama(
+        const streetView = new google.maps.StreetViewPanorama(
             streetDiv, streetOpts);
         map.setStreetView(streetView);
-        var stv = 9;
+        let stv = 9;
         google.maps.event.addListener(streetView, "visible_changed",
             function () {
                 if (streetView.getVisible()) {
@@ -320,21 +338,21 @@
         google.maps.event.addListener(streetView, "position_changed",
             function () {
                 if (stv == 1) {
-                    var pos = streetView.getPosition();
+                    const pos = streetView.getPosition();
                     map.panTo(pos);
                 }
             }
         );
 
-        var layer = new TileLayer();
+        const layer = new TileLayer();
 
         zoomLabel = createZoomLabel();
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(zoomLabel);
 
-        var control = createMapControl(layer);
+        const control = createMapControl(layer);
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(control);
 
-        var authority = document.getElementById("authority");
+        const authority = document.getElementById("authority");
         authority.parentNode.removeChild(authority);
         map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(authority);
 
@@ -346,7 +364,7 @@
         });
 
         if (location.search.indexOf("?q=") === 0) {
-            var kmlUrl = location.search.substring(3);
+            let kmlUrl = location.search.substring(3);
             kmlUrl = decodeURIComponent(kmlUrl);
 //            kmlUrl += "?t=" + new Date().getTime();
             kml = new google.maps.KmlLayer(kmlUrl);
