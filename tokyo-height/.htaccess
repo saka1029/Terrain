@@ -1,0 +1,11 @@
+#####htaccess#####
+# GoogleMapsのAPIキーが含まれているtokyo-height.jsの外部アクセスを拒否します。
+#SetEnvIf Referer "^http://tokyoheight\.html\.xdomain\.jp" ok_url
+#<Files tokyo-height.js>
+#order deny,allow
+#deny from all
+#allow from env=ok_url
+#</Files>
+#default
+#nocontents
+#####end:htaccess#####

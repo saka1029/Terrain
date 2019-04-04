@@ -1,0 +1,181 @@
+<html lang="ja">
+<head>
+<title>東京標高地形地図について</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+<!-- meta name="viewport" content="width=device-width; minimum-scale=1.0; maximum-scale=1.0; user-scalable=0;" -->
+<script>
+  // ファイルがローカル（プロトコルが'file:'）のときは
+  // Google Analyticsのコードを実行しない。
+  if (location.protocol === "http:") {
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-37161278-3', 'digi2.jp');
+  ga('send', 'pageview');
+  }
+</script>
+<style type="text/css">
+dt { margin-top: 1em; font-weight: bold; }
+</style>
+</head>
+<body>
+<div style="width: 640px; margin: 0 auto;">
+<table border="1" width="100%">
+<tr>
+<td width="100px">
+<img src="image/TokyoHeight128.png">
+</td>
+<td valign="middle" width="*">
+<div style="font-size: 27pt;"><a href="index.html">東京標高地形地図</a></div>
+</td>
+</tr>
+</table>
+<dl>
+
+    <dt>出典</dt>
+    <dd>
+        <p>
+            この地図の作成に当たっては、
+            国土地理院長の承認を得て、同院発行の基盤地図情報を使用しています。
+            （承認番号　平25情使、 第276号）
+        </p>
+        <p>
+            この地図は富士川砂防事務所長の承認を得て、
+            同所発行の基盤地図情報を使用しています。
+            （承認番号 国関整富調第１６号）
+        </p>
+        <p>
+            この地図は沼津河川国道事務所長の承認を得て、
+            同所発行の基盤地図情報を使用しています。 
+            （承認番号国部整沼一調第 70 号）
+        </p>
+        <p>
+            この地図は関東地方整備局河川部長の承認を得て、
+            同所発行の基盤地図情報を使用しています。
+            （承認番号 国関整河計第４３号）
+        </p>
+    </dd>
+
+    <dt>操作</dt>
+    <dd>
+        ＋－ボタンで地図の表示範囲を変更することができます。<br>
+        段彩陰影図はズームレベル10から16に範囲にある時だけ表示されます。<br>
+        ズームレベルは画面左上の青枠内に表示されている数字です。<br>
+        ペグマン（人の形をした黄色いアイコンを地図上にドラッグアンドドロップすると
+        ストリートビューで、その場所を参照することができます。<br>
+        画面左上のスライダーで段彩陰影図の不透明度を変更することができます。<br>
+    </dd>
+
+    <dt>パラメータ</dt>
+    <dd>
+        <dl>
+            URLに以下のパラメータを指定することができます。
+            これらのパラメータはすべて省略可能です。
+            <dt>中心(c)</dt>
+            <dd>
+                <b>c=緯度,経度</b>の形式で表示する地図の中心点を指定することが
+                できます。
+                以下の例は東京駅を中心に表示する例です。
+                <br>
+                <a
+                    href="http://tokyoheight.html.xdomain.jp/?c=35.681167,139.767052&z=16"
+                    target="_blank">
+                    http://tokyoheight.html.xdomain.jp/?c=35.681167,139.767052&z=16
+                </a>
+            </dd>
+            <dt>不透明度(o)</dt>
+            <dd>
+                <b>o=不透明度</b>の形式で段彩陰影図の不透明度を指定することができます。
+                不透明度は0から100の範囲で指定することができます。
+                0にすると段彩陰影図が表示されなくなります。
+            </dd>
+            <dt>ズームレベル(z)</dt>
+            <dd>
+                <b>z=ズームレベル</b>でズームレベルを指定することができます。
+                ズームレベルは1から22の範囲で指定することができます。
+                1は世界地図全体を表示します。22は最も拡大した表示になります。
+                段彩陰影図はズームレベル10から16の範囲で指定したときに表示されます。
+            </dd>
+            <dt>ラベル表示(l)</dt>
+            <dd>
+                <b>l=座標値表示</b>で段彩陰影図における各イメージ(256×256ドット)
+                のGoogle座標値表示を切り替えることができます。
+                0は座標値表示を行いません。
+                1は座標値表示を行います。
+            </dd>
+        </dl>
+    </dd>
+
+    <dt>ページへの埋め込み</dt>
+    <dd>
+        HTMLページに以下のように記述すると地図を埋め込むことができます。
+        <pre>
+            &lt;iframe src="index.html?z=16&amp;c=35.6896342,139.69210069999997"
+                style="border:none"
+                width=600 height=450 &gt;
+            &lt;/iframe&gt;
+        </pre>
+        <b>東京都庁周辺</b><br>
+            <iframe src="index.html?z=16&c=35.6896342,139.69210069999997"
+                style="border:none"
+                width=600 height=450 >
+            </iframe>
+    </dd>
+
+    <dt>参考</dt>
+    <dd>
+        <dl>
+            <dt>
+                <a target="ref" href="http://www.gsi.go.jp/kiban/index.html">
+                基盤地図情報サイト
+                </a>
+            </dt>
+            <dd>
+                段彩図の元となる基盤地図情報数値標高モデル
+                をダウンロードしています。
+            </dd>
+
+            <dt>
+                <a target="ref" href="http://hkuma.com/rail/gmaplayer.html">
+                Googleマップオーバーレイマップ
+                </a>
+            </dt>
+            <dd>
+                Google Mapにイメージを重ねて表示する方法を
+                参考にしています。
+            </dd>
+
+            <dt>
+                <a target="ref"
+                    href="http://hosohashi.blog59.fc2.com/blog-entry-5.html">
+                グーグルマップ（Google Maps）の座標間変換式について
+                </a>
+            </dt>
+            <dd>
+                世界測地系（緯度・経度）からGoogle Maps APIで使用する
+                座標系への変換式を参考にしています。
+            </dd>
+
+            <dt>
+                <a target="ref" href="http://www.gridscapes.net/">
+                TokyoTerrain東京地形地図
+                </a>
+            </dt>
+            <dd>
+                段彩図の色使いを参考にしています。
+            </dd>
+
+        </dl>
+    </dd>
+
+    <dt>色分け</dt>
+    <dd>
+        <img src="image/HeightColor.png" alt="カラーマップ">
+    </dd>
+
+</dl>
+</div>
+</body>
+</html>
