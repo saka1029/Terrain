@@ -110,5 +110,3 @@ Google Maps API イベント
 div id=zoom-labelを更新するために既にフックしている。このときにURLおよび履歴を更新する。
 #### slider.onchange
 透過度を変更するスライダーに変更があったときにURLおよび履歴を更新する。
-
-
